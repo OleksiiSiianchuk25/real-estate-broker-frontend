@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import ListingsPage from "./pages/ListingsPage";
 import Navbar from "./components/Navbar";
+import PropertyDetailsPage from "./pages/PropertyDetailsPage";
 import { CssBaseline } from "@mui/material";
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/listings" element={<ListingsPage />} />
+        <Route path="/property/:id" element={<PropertyDetailsPage />} />
       </Routes>
     </Router>
   );
