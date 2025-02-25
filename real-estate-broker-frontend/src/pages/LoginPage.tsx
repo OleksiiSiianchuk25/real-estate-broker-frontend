@@ -30,19 +30,26 @@ const LoginPage = () => {
     setSuccess("");
 
     try {
-        const response = await api.post("/auth/login", formData);
-        const { token, role } = response.data; 
+        const response = await api.post("/auth/login", formData, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
 
-        localStorage.setItem("token", token);
-        localStorage.setItem("role", role); 
+        const { accessToken, role } = response.data;
+
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("role", role);
+
+        window.dispatchEvent(new Event("storage"));
 
         setSuccess("Вхід успішний! Перенаправлення...");
         setTimeout(() => navigate("/"), 2000);
     } catch (err) {
+        console.error("Помилка при логіні:", err);
         setError("Невірний email або пароль.");
     }
-};
-
+  };
 
   return (
     <Container maxWidth="xs">

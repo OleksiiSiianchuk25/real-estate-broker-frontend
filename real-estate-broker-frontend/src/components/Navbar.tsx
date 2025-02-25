@@ -5,11 +5,11 @@ import { logout } from "../utils/api";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("accessToken"));
 
   useEffect(() => {
     const handleStorageChange = () => {
-      setIsAuthenticated(!!localStorage.getItem("token"));
+      setIsAuthenticated(!!localStorage.getItem("accessToken"));
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -21,6 +21,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout();
+    localStorage.removeItem("accessToken");
     setIsAuthenticated(false);
     navigate("/login");
   };
@@ -39,9 +40,14 @@ const Navbar = () => {
         </Button>
 
         {isAuthenticated ? (
-          <Button color="inherit" onClick={handleLogout}>
-            Вийти
-          </Button>
+          <>
+            <Button color="inherit" component={Link} to="/profile">
+              Кабінет
+            </Button>
+            <Button color="inherit" onClick={handleLogout}>
+              Вийти
+            </Button>
+          </>
         ) : (
           <>
             <Button color="inherit" component={Link} to="/login">

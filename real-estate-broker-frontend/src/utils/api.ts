@@ -2,8 +2,6 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8080/api";
 
-const getToken = () => localStorage.getItem("accessToken");
-
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -14,7 +12,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   async (config) => {
-    let token = getToken();
+    const token = localStorage.getItem("accessToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -26,19 +24,16 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response.status === 401) {
+    if (error.response && error.response.status === 401) {
       try {
-        const refreshResponse = await axios.post(
-          `${API_BASE_URL}/auth/refresh`,
-          {},
-          { withCredentials: true }
-        );
-        localStorage.setItem("accessToken", refreshResponse.data.accessToken);
-        error.config.headers.Authorization = `Bearer ${refreshResponse.data.accessToken}`;
+        const refreshResponse = await api.post("/auth/refresh", {}, { withCredentials: true });
+        const { accessToken } = refreshResponse.data;
+        
+        localStorage.setItem("accessToken", accessToken);
+        error.config.headers.Authorization = `Bearer ${accessToken}`;
         return api(error.config);
       } catch (refreshError) {
-        localStorage.removeItem("accessToken");
-        window.location.href = "/login";
+        await logout(); 
       }
     }
     return Promise.reject(error);
@@ -47,12 +42,14 @@ api.interceptors.response.use(
 
 export const logout = async () => {
   try {
-      await api.post("/auth/logout");
+    await api.post("/auth/logout", {}, { withCredentials: true });
   } catch (error) {
-      console.error("Logout failed", error);
+    console.error("Logout failed", error);
   }
-  localStorage.removeItem("token"); 
-  window.location.href = "/login"; 
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("role");
+  document.cookie = "refreshToken=; Max-Age=0; path=/;"; 
+  window.location.href = "/login";
 };
 
 export default api;

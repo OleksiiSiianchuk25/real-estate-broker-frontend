@@ -5,6 +5,8 @@ import ListingsPage from "./pages/ListingsPage";
 import PropertyDetailsPage from "./pages/PropertyDetailsPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import UserProfilePage from "./pages/UserProfilePage";
+import FavoritesPage from "./pages/FavoritesPage";
 
 function App() {
   return (
@@ -18,8 +20,8 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
 
         <Route element={<PrivateRoute />}>
-          <Route path="/profile" element={<h2>Мій профіль</h2>} />
-          <Route path="/favorites" element={<h2>Мої закладки</h2>} />
+          <Route path="/profile" element={<UserProfilePage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
         </Route>
       </Routes>
     </Router>

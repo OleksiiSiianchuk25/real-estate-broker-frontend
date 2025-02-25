@@ -14,6 +14,7 @@ import api from "../utils/api";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { Button } from "@mui/material";
 
 // Додаємо кастомний маркер
 const customIcon = new L.Icon({
@@ -70,6 +71,7 @@ const PropertyDetailsPage = () => {
 
     fetchProperty();
   }, [id]);
+  
 
   if (loading) return <CircularProgress />;
   if (error) return <Alert severity="error">{error}</Alert>;
@@ -82,6 +84,16 @@ const PropertyDetailsPage = () => {
     }, [coords, map]);
     return null;
   }
+
+  const handleAddFavorite = async () => {
+    try {
+      await api.post("/favorites", { propertyId: property.id });
+      alert("Оголошення додано до закладок!");
+    } catch (err) {
+      console.error("Помилка додавання в закладки", err);
+      alert("Не вдалося додати оголошення до закладок.");
+    }
+  };
 
   return (
     <Container>
@@ -130,7 +142,10 @@ const PropertyDetailsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Карта */}
+      <Button variant="contained" color="primary" onClick={handleAddFavorite}>
+        Додати в закладки
+      </Button>
+
       <Box mt={3} sx={{ height: "400px" }}>
         <Typography variant="h6" mb={2}>Локація на карті</Typography>
         <MapContainer

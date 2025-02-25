@@ -43,11 +43,23 @@ const RegisterPage = () => {
     setSuccess("");
 
     try {
-      await api.post("/auth/register", formData);
-      setSuccess("Реєстрація успішна! Ви можете увійти.");
-      setTimeout(() => navigate("/login"), 2000);
+        const response = await api.post("/auth/register", {
+            fullName: formData.fullName,
+            email: formData.email,
+            phone: formData.phone,
+            password: formData.password,
+            role: formData.role,
+            agency: formData.role === "REALTOR" ? formData.agency : "",
+            telegram: formData.telegram || "",
+        }, {
+            headers: { "Content-Type": "application/json" }, // ✅ Вказуємо заголовки
+        });
+
+        setSuccess("Реєстрація успішна! Перенаправлення...");
+        setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
-      setError("Не вдалося зареєструватися. Перевірте введені дані.");
+        console.error("Помилка при реєстрації:", err);
+        setError("Не вдалося зареєструватися. Спробуйте ще раз.");
     }
   };
 
