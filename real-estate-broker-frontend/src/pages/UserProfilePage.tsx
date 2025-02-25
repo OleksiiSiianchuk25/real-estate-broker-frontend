@@ -53,9 +53,17 @@ const UserProfilePage = () => {
     }
   };
 
-  // Додаємо функцію для переходу на сторінку закладок
+  // Переходи для різних дій
   const handleFavorites = () => {
     navigate("/favorites");
+  };
+
+  const handleAddProperty = () => {
+    navigate("/add-property");
+  };
+
+  const handleMyProperties = () => {
+    navigate("/my-properties");
   };
 
   return (
@@ -152,6 +160,29 @@ const UserProfilePage = () => {
         >
           Переглянути улюблені
         </Button>
+
+        {user.role === "REALTOR" && (
+          <>
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              sx={{ mt: 2 }}
+              onClick={handleAddProperty}
+            >
+              Додати оголошення
+            </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              fullWidth
+              sx={{ mt: 2 }}
+              onClick={handleMyProperties}
+            >
+              Мої оголошення
+            </Button>
+          </>
+        )}
       </Box>
     </Container>
   );
