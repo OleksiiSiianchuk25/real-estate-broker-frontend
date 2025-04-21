@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Container, Typography, TextField, Button, Box, Alert } from "@mui/material";
+import { Container, Typography, TextField, Button, Box, Alert, CircularProgress } from "@mui/material";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 
@@ -18,6 +18,7 @@ const UserProfilePage = () => {
   const [formData, setFormData] = useState(user);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // Отримуємо дані користувача при завантаженні
   useEffect(() => {
@@ -28,6 +29,8 @@ const UserProfilePage = () => {
       } catch (error) {
         console.error("Помилка отримання профілю:", error);
         setError("Не вдалося завантажити профіль");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -65,6 +68,14 @@ const UserProfilePage = () => {
   const handleMyProperties = () => {
     navigate("/my-properties");
   };
+
+  if (loading) {
+    return (
+      <Container maxWidth="sm" style={{ textAlign: "center", marginTop: "2rem" }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="sm">

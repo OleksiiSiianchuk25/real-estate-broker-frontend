@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { AppBar, Toolbar, Typography, Button } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, CircularProgress } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { logout } from "../utils/api"; 
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("accessToken"));
+  const [loadingLogout, setLoadingLogout] = useState(false);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -20,10 +21,17 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = async () => {
-    await logout();
-    localStorage.removeItem("accessToken");
-    setIsAuthenticated(false);
-    navigate("/login");
+    setLoadingLogout(true);
+    try {
+      await logout();
+      localStorage.removeItem("accessToken");
+      setIsAuthenticated(false);
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      setLoadingLogout(false);
+    }
   };
 
   return (
@@ -44,8 +52,8 @@ const Navbar = () => {
             <Button color="inherit" component={Link} to="/profile">
               Кабінет
             </Button>
-            <Button color="inherit" onClick={handleLogout}>
-              Вийти
+            <Button color="inherit" onClick={handleLogout} disabled={loadingLogout}>
+              {loadingLogout ? <CircularProgress size={20} color="inherit" /> : "Вийти"}
             </Button>
           </>
         ) : (

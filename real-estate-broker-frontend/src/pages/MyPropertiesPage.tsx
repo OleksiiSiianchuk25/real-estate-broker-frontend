@@ -44,7 +44,12 @@ const MyPropertiesPage = () => {
     fetchMyProperties();
   }, []);
 
-  if (loading) return <CircularProgress />;
+  if (loading)
+    return (
+      <Container maxWidth="sm" style={{ textAlign: "center", marginTop: "2rem" }}>
+        <CircularProgress />
+      </Container>
+    );
   if (error) return <Typography color="error">{error}</Typography>;
   if (properties.length === 0)
     return (

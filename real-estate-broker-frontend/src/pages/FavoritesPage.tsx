@@ -4,19 +4,18 @@ import { Link } from "react-router-dom";
 import api from "../utils/api";
 
 interface Favorite {
+  id: number;
+  userId: number;
+  property: {
     id: number;
-    userId: number;
-    property: {
-      id: number;
-      title: string;
-      price: string;
-      city: string;
-      imageUrl: string;
-      status: string;
-      type: string;
-    };
-  }
-  
+    title: string;
+    price: string;
+    city: string;
+    imageUrl: string;
+    status: string;
+    type: string;
+  };
+}
 
 const FavoritesPage = () => {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
@@ -49,10 +48,19 @@ const FavoritesPage = () => {
     }
   };
 
-  if (loading) return <CircularProgress />;
+  if (loading)
+    return (
+      <Container maxWidth="sm" style={{ textAlign: "center", marginTop: "2rem" }}>
+        <CircularProgress />
+      </Container>
+    );
   if (error) return <Typography color="error">{error}</Typography>;
   if (favorites.length === 0) {
-    return <Typography variant="h6" align="center" sx={{ mt: 3 }}>Немає збережених оголошень.</Typography>;
+    return (
+      <Typography variant="h6" align="center" sx={{ mt: 3 }}>
+        Немає збережених оголошень.
+      </Typography>
+    );
   }
 
   return (
@@ -64,7 +72,7 @@ const FavoritesPage = () => {
         {favorites.map((favorite) => (
           <Grid item xs={12} sm={6} md={4} key={favorite.id}>
             <Card>
-            <CardMedia
+              <CardMedia
                 component="img"
                 height="200"
                 image={favorite.property.imageUrl || "https://via.placeholder.com/400"}

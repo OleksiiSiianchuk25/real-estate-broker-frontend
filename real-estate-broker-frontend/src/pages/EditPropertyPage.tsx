@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Container, TextField, Button, Typography, Alert, Box } from "@mui/material";
+import { Container, TextField, Button, Typography, Alert, Box, CircularProgress } from "@mui/material";
 import api from "../utils/api";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -54,7 +54,12 @@ const EditPropertyPage = () => {
     }
   };
 
-  if (loading) return <Typography>Loading...</Typography>;
+  if (loading)
+    return (
+      <Container maxWidth="sm" style={{ textAlign: "center", marginTop: "2rem" }}>
+        <CircularProgress />
+      </Container>
+    );
 
   return (
     <Container maxWidth="sm">
@@ -114,7 +119,6 @@ const EditPropertyPage = () => {
           value={formData.imageUrl}
           onChange={handleChange}
         />
-        {/* При необхідності можна додати поля для зміни статусу та типу оголошення */}
         <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} onClick={handleSubmit}>
           Оновити оголошення
         </Button>

@@ -7,6 +7,7 @@ import {
   Button,
   Box,
   Alert,
+  CircularProgress,
 } from "@mui/material";
 import api from "../utils/api";
 
@@ -17,9 +18,9 @@ const LoginPage = () => {
     email: "",
     password: "",
   });
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -28,26 +29,26 @@ const LoginPage = () => {
   const handleLogin = async () => {
     setError("");
     setSuccess("");
-
+    setLoading(true);
     try {
-        const response = await api.post("/auth/login", formData, {
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
+      const response = await api.post("/auth/login", formData, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-        const { accessToken, role } = response.data;
+      const { accessToken, role } = response.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("role", role);
+      window.dispatchEvent(new Event("storage"));
 
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("role", role);
-
-        window.dispatchEvent(new Event("storage"));
-
-        setSuccess("Вхід успішний! Перенаправлення...");
-        setTimeout(() => navigate("/"), 2000);
+      setSuccess("Вхід успішний! Перенаправлення...");
+      setTimeout(() => navigate("/"), 2000);
     } catch (err) {
-        console.error("Помилка при логіні:", err);
-        setError("Невірний email або пароль.");
+      console.error("Помилка при логіні:", err);
+      setError("Невірний email або пароль.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -71,7 +72,6 @@ const LoginPage = () => {
         value={formData.email}
         onChange={handleChange}
       />
-
       <TextField
         fullWidth
         label="Пароль"
@@ -83,15 +83,15 @@ const LoginPage = () => {
         onChange={handleChange}
       />
 
-      <Button
-        fullWidth
-        variant="contained"
-        color="primary"
-        sx={{ mt: 2 }}
-        onClick={handleLogin}
-      >
-        Увійти
-      </Button>
+      <Box mt={2} textAlign="center">
+        {loading ? (
+          <CircularProgress />
+        ) : (
+          <Button fullWidth variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleLogin}>
+            Увійти
+          </Button>
+        )}
+      </Box>
 
       <Box mt={2} textAlign="center">
         <Typography variant="body2">

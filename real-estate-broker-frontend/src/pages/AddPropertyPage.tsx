@@ -10,6 +10,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
@@ -58,6 +59,7 @@ const AddPropertyPage = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [mapCoordinates, setMapCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -71,6 +73,7 @@ const AddPropertyPage = () => {
   const handleSubmit = async () => {
     setError("");
     setSuccess("");
+    setLoading(true);
     // Якщо користувач вибрав координати, оновлюємо formData
     if (mapCoordinates) {
       setFormData((prev) => ({
@@ -97,6 +100,8 @@ const AddPropertyPage = () => {
     } catch (err) {
       setError("Помилка створення оголошення");
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -216,9 +221,13 @@ const AddPropertyPage = () => {
           )}
         </Box>
 
-        <Button variant="contained" color="primary" fullWidth sx={{ mt: 2 }} onClick={handleSubmit}>
-          Створити оголошення
-        </Button>
+        <Box mt={2} textAlign="center">
+          {loading ? <CircularProgress /> : (
+            <Button variant="contained" color="primary" fullWidth onClick={handleSubmit}>
+              Створити оголошення
+            </Button>
+          )}
+        </Box>
       </Box>
     </Container>
   );
