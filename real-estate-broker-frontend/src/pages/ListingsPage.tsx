@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+// src/pages/ListingsPage.tsx
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Typography,
-  Grid,
   Card,
   CardMedia,
   CardContent,
@@ -30,9 +30,10 @@ interface Property {
   type: string;
 }
 
-const fallbackImage = "https://cdn.britannica.com/73/114973-050-2DC46083/Midtown-Manhattan-Empire-State-Building-New-York.jpg";
+const fallbackImage =
+  "https://cdn.britannica.com/73/114973-050-2DC46083/Midtown-Manhattan-Empire-State-Building-New-York.jpg";
 
-const ListingsPage = () => {
+const ListingsPage: React.FC = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -49,15 +50,15 @@ const ListingsPage = () => {
       const response = await api.get<Property[]>("/properties", {
         params: {
           search,
-          status: statusFilter ? statusFilter.toUpperCase() : null,
-          type: typeFilter ? typeFilter.toUpperCase() : null,
-          city: cityFilter,
+          status: statusFilter ? statusFilter.toUpperCase() : undefined,
+          type: typeFilter ? typeFilter.toUpperCase() : undefined,
+          city: cityFilter || undefined,
           minPrice: minPrice || undefined,
           maxPrice: maxPrice || undefined,
         },
       });
       setProperties(response.data);
-    } catch (err) {
+    } catch {
       setError("Не вдалося завантажити дані");
     } finally {
       setLoading(false);
@@ -68,13 +69,12 @@ const ListingsPage = () => {
     fetchProperties();
   }, [search, statusFilter, typeFilter, cityFilter, minPrice, maxPrice]);
 
-  const formatPrice = (price: string) => {
-    return new Intl.NumberFormat("uk-UA", {
+  const formatPrice = (price: string) =>
+    new Intl.NumberFormat("uk-UA", {
       style: "currency",
       currency: "UAH",
       minimumFractionDigits: 0,
     }).format(Number(price));
-  };
 
   const handleClearFilters = () => {
     setSearch("");
@@ -91,7 +91,6 @@ const ListingsPage = () => {
         🏡 Список оголошень
       </Typography>
 
-      {/* Фільтри */}
       <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
         <Box display="flex" flexWrap="wrap" gap={2}>
           <TextField
@@ -103,15 +102,12 @@ const ListingsPage = () => {
           />
 
           <FormControl fullWidth sx={{ minWidth: 200 }}>
-            <InputLabel id="city-label" shrink>
-              Місто
-            </InputLabel>
+            <InputLabel id="city-label">Місто</InputLabel>
             <Select
               labelId="city-label"
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
               displayEmpty
-              notched
             >
               <MenuItem value="">
                 <em>Всі</em>
@@ -125,15 +121,12 @@ const ListingsPage = () => {
           </FormControl>
 
           <FormControl fullWidth sx={{ minWidth: 200 }}>
-            <InputLabel id="status-label" shrink>
-              Статус
-            </InputLabel>
+            <InputLabel id="status-label">Статус</InputLabel>
             <Select
               labelId="status-label"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               displayEmpty
-              notched
             >
               <MenuItem value="">
                 <em>Всі</em>
@@ -145,15 +138,12 @@ const ListingsPage = () => {
           </FormControl>
 
           <FormControl fullWidth sx={{ minWidth: 200 }}>
-            <InputLabel id="type-label" shrink>
-              Тип житла
-            </InputLabel>
+            <InputLabel id="type-label">Тип житла</InputLabel>
             <Select
               labelId="type-label"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
               displayEmpty
-              notched
             >
               <MenuItem value="">
                 <em>Всі</em>
@@ -181,66 +171,66 @@ const ListingsPage = () => {
             sx={{ minWidth: 120 }}
           />
         </Box>
-        <Box mt={2} display="flex" justifyContent="flex-end">
+        <Box mt={2} textAlign="right">
           <Button variant="outlined" color="secondary" onClick={handleClearFilters}>
             Очистити фільтри
           </Button>
         </Box>
       </Paper>
 
-      {/* Відображення списку */}
       {loading ? (
         <Box display="flex" justifyContent="center" mt={3}>
           <CircularProgress />
         </Box>
       ) : error ? (
-        <Typography color="error">{error}</Typography>
+        <Typography color="error" align="center">{error}</Typography>
       ) : (
-        <Grid container spacing={3}>
+        <Box
+          display="grid"
+          gap={3}
+          sx={{
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "1fr 1fr",
+              md: "1fr 1fr 1fr",
+            },
+          }}
+        >
           {properties.length > 0 ? (
             properties.map((property) => (
-              <Grid item xs={12} sm={6} md={4} key={property.id}>
-                <Card>
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={property.imageUrl || fallbackImage}
-                    alt={property.title}
-                    onError={(e: any) => {
-                      e.target.onerror = null;
-                      e.target.src = fallbackImage;
-                    }}
-                  />
-                  <CardContent>
-                    <Typography variant="h6">{property.title}</Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      📍 {property.city}
-                    </Typography>
-                    <Typography color="textSecondary">
-                      {formatPrice(property.price)}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {property.status === "FOR_SALE"
-                        ? "Продається"
-                        : property.status === "FOR_RENT"
-                        ? "Оренда"
-                        : "Продано"}
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button size="small" color="primary" component={Link} to={`/property/${property.id}`}>
-                      Детальніше
-                    </Button>
-                  </CardActions>
-                </Card>
-              </Grid>
+              <Card key={property.id}>
+                <CardMedia
+                  component="img"
+                  height="200"
+                  image={property.imageUrl || fallbackImage}
+                  alt={property.title}
+                  onError={(e: any) => {
+                    e.target.onerror = null;
+                    e.target.src = fallbackImage;
+                  }}
+                />
+                <CardContent>
+                  <Typography variant="h6">{property.title}</Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    📍 {property.city}
+                  </Typography>
+                  <Typography color="textSecondary">
+                    {formatPrice(property.price)}
+                  </Typography>
+                </CardContent>
+                <CardActions>
+                  <Button size="small" color="primary" component={Link} to={`/property/${property.id}`}>
+                    Детальніше
+                  </Button>
+                </CardActions>
+              </Card>
             ))
           ) : (
-            <Typography variant="h6" align="center" sx={{ width: "100%", mt: 3 }}>
+            <Typography variant="h6" align="center" sx={{ mt: 3 }}>
               Немає результатів за вашими фільтрами.
             </Typography>
           )}
-        </Grid>
+        </Box>
       )}
     </Container>
   );
