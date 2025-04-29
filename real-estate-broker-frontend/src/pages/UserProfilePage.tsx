@@ -1,9 +1,17 @@
-import { useState, useEffect } from "react";
-import { Container, Typography, TextField, Button, Box, Alert, CircularProgress } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
 
-const UserProfilePage = () => {
+const UserProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState({
     fullName: "",
@@ -20,7 +28,6 @@ const UserProfilePage = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Отримуємо дані користувача при завантаженні
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -51,23 +58,17 @@ const UserProfilePage = () => {
       setUser(formData);
       setSuccess("Профіль оновлено успішно!");
       setEditMode(false);
-    } catch (err) {
+    } catch {
       setError("Помилка оновлення профілю");
     }
   };
 
-  // Переходи для різних дій
-  const handleFavorites = () => {
-    navigate("/favorites");
-  };
-
-  const handleAddProperty = () => {
-    navigate("/add-property");
-  };
-
-  const handleMyProperties = () => {
-    navigate("/my-properties");
-  };
+  // Навігація
+  const handleFavorites = () => navigate("/favorites");
+  const handleAddProperty = () => navigate("/add-property");
+  const handleMyProperties = () => navigate("/my-properties");
+  const handleAdminPanel = () => navigate("/admin");
+  const handleStats = () => navigate("/admin/stats");
 
   if (loading) {
     return (
@@ -101,7 +102,6 @@ const UserProfilePage = () => {
           label="Email"
           name="email"
           value={formData.email}
-          onChange={handleChange}
           disabled
           margin="normal"
         />
@@ -191,6 +191,29 @@ const UserProfilePage = () => {
               onClick={handleMyProperties}
             >
               Мої оголошення
+            </Button>
+          </>
+        )}
+
+        {user.role === "ADMIN" && (
+          <>
+            <Button
+              variant="contained"
+              color="warning"
+              fullWidth
+              sx={{ mt: 2 }}
+              onClick={handleAdminPanel}
+            >
+              Перейти в адмін-панель
+            </Button>
+            <Button
+              variant="contained"
+              color="info"
+              fullWidth
+              sx={{ mt: 1 }}
+              onClick={handleStats}
+            >
+              Переглянути статистику
             </Button>
           </>
         )}

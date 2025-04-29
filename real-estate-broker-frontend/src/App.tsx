@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import PrivateRoute from "./components/PrivateRoute";
 import ListingsPage from "./pages/ListingsPage";
@@ -10,6 +10,15 @@ import FavoritesPage from "./pages/FavoritesPage";
 import AddPropertyPage from "./pages/AddPropertyPage";
 import EditPropertyPage from "./pages/EditPropertyPage";
 import MyPropertiesPage from "./pages/MyPropertiesPage";
+import AdminLayout from "./pages/admin/AdminLayout";
+import RolesPage from "./pages/admin/RolesPage";
+import UsersPage from "./pages/admin/UsersPage";
+import PropertiesPage from "./pages/admin/PropertiesPage";
+import CategoriesPage from "./pages/admin/CategoriesPage";
+import RequireAdmin from "./components/RequireAdmin";
+import StatsPage from "./pages/admin/StatsPage";
+import FavoritesPageAdmin from "./pages/admin/FavoritesPageAdmin";
+
 
 function App() {
   return (
@@ -29,6 +38,31 @@ function App() {
           <Route path="/edit-property/:id" element={<EditPropertyPage />} />
           <Route path="/my-properties" element={<MyPropertiesPage />} />
         </Route>
+
+        {/* Адмінські маршрути */}
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminLayout />
+            </RequireAdmin>
+          }
+        >
+          <Route index element={<Navigate to="users" replace />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="roles" element={<RolesPage />} />
+          <Route path="categories" element={<CategoriesPage />} />
+          <Route path="favorites" element={<FavoritesPageAdmin />} />
+          <Route path="properties" element={<PropertiesPage />} />
+        </Route>
+
+        <Route path="/admin/stats" element={
+          <RequireAdmin>
+            <StatsPage/>
+          </RequireAdmin>
+        }/>
+
+        <Route path="/403" element={<h1>403 — Доступ заборонено</h1>} />
       </Routes>
     </Router>
   );
