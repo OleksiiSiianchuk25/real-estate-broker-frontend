@@ -1,5 +1,5 @@
 // src/pages/admin/RolesPage.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Button,
@@ -28,20 +28,21 @@ interface Role {
 const RolesPage: React.FC = () => {
   const [rows, setRows] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [viewOpen, setViewOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [current, setCurrent] = useState<Partial<Role>>({});
 
-  // Fetch roles from backend (or fallback to hardcoded if endpoint unavailable)
+  // Fetch roles
   const fetch = async () => {
     setLoading(true);
     try {
       const resp = await api.get<Role[]>("/api/admin/roles");
       setRows(resp.data);
     } catch {
-      // fallback if no admin roles endpoint
+      // fallback if endpoint unavailable
       setRows([
         { id: 1, name: "USER" },
         { id: 2, name: "REALTOR" },
@@ -56,6 +57,14 @@ const RolesPage: React.FC = () => {
     fetch();
   }, []);
 
+  // Фільтруємо рядки за пошуковим терміном
+  const filteredRows = useMemo(() => {
+    if (!searchTerm) return rows;
+    return rows.filter((r) =>
+      r.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [rows, searchTerm]);
+
   const handleView = (role: Role) => {
     setCurrent(role);
     setViewOpen(true);
@@ -66,7 +75,7 @@ const RolesPage: React.FC = () => {
   };
   const handleDelete = async (id: number) => {
     if (window.confirm("Видалити роль?")) {
-      await api.delete(`/admin/roles/${id}`);
+      await api.delete(`/api/admin/roles/${id}`);
       fetch();
     }
   };
@@ -85,16 +94,19 @@ const RolesPage: React.FC = () => {
       width: 120,
       getActions: (params: GridRowParams) => [
         <GridActionsCellItem
+          key="view"
           icon={<VisibilityIcon />}
           label="Переглянути"
           onClick={() => handleView(params.row as Role)}
         />,
         <GridActionsCellItem
+          key="edit"
           icon={<EditIcon />}
           label="Редагувати"
           onClick={() => handleEdit(params.row as Role)}
         />,
         <GridActionsCellItem
+          key="delete"
           icon={<DeleteIcon />}
           label="Видалити"
           onClick={() => handleDelete(params.id as number)}
@@ -103,7 +115,7 @@ const RolesPage: React.FC = () => {
     },
   ];
 
-  // View dialog
+  // Діалоги перегляду/редагування/додавання
   const ViewDialog: React.FC = () => (
     <Dialog open={viewOpen} onClose={() => setViewOpen(false)} fullWidth>
       <DialogTitle>Перегляд ролі</DialogTitle>
@@ -129,7 +141,6 @@ const RolesPage: React.FC = () => {
     </Dialog>
   );
 
-  // Add/Edit dialog
   const EditDialog: React.FC<{ open: boolean; isNew: boolean }> = ({
     open,
     isNew,
@@ -160,9 +171,7 @@ const RolesPage: React.FC = () => {
 
     return (
       <Dialog open={open} onClose={handleClose} fullWidth>
-        <DialogTitle>
-          {isNew ? "Додати роль" : "Редагувати роль"}
-        </DialogTitle>
+        <DialogTitle>{isNew ? "Додати роль" : "Редагувати роль"}</DialogTitle>
         <DialogContent dividers>
           <TextField
             label="Назва"
@@ -186,12 +195,23 @@ const RolesPage: React.FC = () => {
 
   return (
     <Box>
-      <Button variant="contained" onClick={handleAdd} sx={{ mb: 2 }}>
+      {/* Пошук */}
+      <TextField
+        label="Пошук ролі"
+        variant="outlined"
+        size="small"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{ mb: 2, width: "300px" }}
+      />
+
+      <Button variant="contained" onClick={handleAdd} sx={{ mb: 2, ml: 2 }}>
         Додати роль
       </Button>
+
       <div style={{ height: 500, width: "100%" }}>
         <DataGrid
-          rows={rows}
+          rows={filteredRows}
           columns={columns}
           loading={loading}
           pageSizeOptions={[5, 10]}

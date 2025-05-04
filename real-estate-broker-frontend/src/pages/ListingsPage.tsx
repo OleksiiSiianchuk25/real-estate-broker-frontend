@@ -26,8 +26,8 @@ interface Property {
   price: string;
   city: string;
   imageUrl: string;
-  status: string;
-  type: string;
+  status: "FOR_SALE" | "FOR_RENT" | "SOLD";
+  type: "APARTMENT" | "HOUSE";
 }
 
 const fallbackImage =
@@ -36,13 +36,34 @@ const fallbackImage =
 const ListingsPage: React.FC = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"" | Property["status"]>("");
+  const [typeFilter, setTypeFilter] = useState<"" | Property["type"]>("");
   const [cityFilter, setCityFilter] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Опції для селектів
+  const cityOptions = [
+    { value: "", label: "Всі міста" },
+    { value: "Київ", label: "Київ" },
+    { value: "Львів", label: "Львів" },
+    { value: "Одеса", label: "Одеса" },
+    { value: "Дніпро", label: "Дніпро" },
+    { value: "Харків", label: "Харків" },
+  ];
+  const statusOptions = [
+    { value: "", label: "Всі статуси" },
+    { value: "FOR_SALE", label: "Продається" },
+    { value: "FOR_RENT", label: "Оренда" },
+    { value: "SOLD", label: "Продано" },
+  ];
+  const typeOptions = [
+    { value: "", label: "Всі типи" },
+    { value: "APARTMENT", label: "Квартира" },
+    { value: "HOUSE", label: "Будинок" },
+  ];
 
   const fetchProperties = async () => {
     setLoading(true);
@@ -50,8 +71,8 @@ const ListingsPage: React.FC = () => {
       const response = await api.get<Property[]>("/properties", {
         params: {
           search,
-          status: statusFilter ? statusFilter.toUpperCase() : undefined,
-          type: typeFilter ? typeFilter.toUpperCase() : undefined,
+          status: statusFilter || undefined,
+          type: typeFilter || undefined,
           city: cityFilter || undefined,
           minPrice: minPrice || undefined,
           maxPrice: maxPrice || undefined,
@@ -93,6 +114,7 @@ const ListingsPage: React.FC = () => {
 
       <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
         <Box display="flex" flexWrap="wrap" gap={2}>
+          {/* пошук */}
           <TextField
             label="Пошук житла"
             fullWidth
@@ -101,58 +123,70 @@ const ListingsPage: React.FC = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
 
+          {/* місто */}
           <FormControl fullWidth sx={{ minWidth: 200 }}>
             <InputLabel id="city-label">Місто</InputLabel>
             <Select
               labelId="city-label"
+              id="city-select"
               value={cityFilter}
+              label="Місто"
               onChange={(e) => setCityFilter(e.target.value)}
-              displayEmpty
+              renderValue={(v) =>
+                cityOptions.find((o) => o.value === v)?.label
+              }
             >
-              <MenuItem value="">
-                <em>Всі</em>
-              </MenuItem>
-              <MenuItem value="Київ">Київ</MenuItem>
-              <MenuItem value="Львів">Львів</MenuItem>
-              <MenuItem value="Одеса">Одеса</MenuItem>
-              <MenuItem value="Дніпро">Дніпро</MenuItem>
-              <MenuItem value="Харків">Харків</MenuItem>
+              {cityOptions.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
 
+          {/* статус */}
           <FormControl fullWidth sx={{ minWidth: 200 }}>
             <InputLabel id="status-label">Статус</InputLabel>
             <Select
               labelId="status-label"
+              id="status-select"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              displayEmpty
+              label="Статус"
+              onChange={(e) => setStatusFilter(e.target.value as any)}
+              renderValue={(v) =>
+                statusOptions.find((o) => o.value === v)?.label
+              }
             >
-              <MenuItem value="">
-                <em>Всі</em>
-              </MenuItem>
-              <MenuItem value="FOR_SALE">Продається</MenuItem>
-              <MenuItem value="FOR_RENT">Оренда</MenuItem>
-              <MenuItem value="SOLD">Продано</MenuItem>
+              {statusOptions.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
 
+          {/* тип */}
           <FormControl fullWidth sx={{ minWidth: 200 }}>
             <InputLabel id="type-label">Тип житла</InputLabel>
             <Select
               labelId="type-label"
+              id="type-select"
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              displayEmpty
+              label="Тип житла"
+              onChange={(e) => setTypeFilter(e.target.value as any)}
+              renderValue={(v) =>
+                typeOptions.find((o) => o.value === v)?.label
+              }
             >
-              <MenuItem value="">
-                <em>Всі</em>
-              </MenuItem>
-              <MenuItem value="apartment">Квартира</MenuItem>
-              <MenuItem value="house">Будинок</MenuItem>
+              {typeOptions.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
 
+          {/* цінові */}
           <TextField
             label="Мін. ціна"
             type="number"
@@ -161,7 +195,6 @@ const ListingsPage: React.FC = () => {
             onChange={(e) => setMinPrice(e.target.value)}
             sx={{ minWidth: 120 }}
           />
-
           <TextField
             label="Макс. ціна"
             type="number"
@@ -219,7 +252,12 @@ const ListingsPage: React.FC = () => {
                   </Typography>
                 </CardContent>
                 <CardActions>
-                  <Button size="small" color="primary" component={Link} to={`/property/${property.id}`}>
+                  <Button
+                    size="small"
+                    color="primary"
+                    component={Link}
+                    to={`/property/${property.id}`}
+                  >
                     Детальніше
                   </Button>
                 </CardActions>

@@ -8,6 +8,7 @@ const tabPaths = [
   "/admin/categories",
   "/admin/favorites",
   "/admin/properties",
+  "/admin/pois"
 ];
 
 const AdminLayout: React.FC = () => {
@@ -27,6 +28,7 @@ const AdminLayout: React.FC = () => {
         <Tab label="Категорії" />
         <Tab label="Улюблені" />
         <Tab label="Оголошення" />
+        <Tab label="POIs" />
       </Tabs>
       <Box sx={{ mt: 3 }}>
         <Outlet />

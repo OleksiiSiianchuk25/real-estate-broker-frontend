@@ -1,4 +1,5 @@
 // src/pages/admin/UsersPage.tsx
+
 import React, { useState, useEffect } from "react";
 import {
   DataGrid,
@@ -13,6 +14,8 @@ import {
   DialogContent,
   TextField,
   DialogActions,
+  Box,
+  CircularProgress,
 } from "@mui/material";
 import api from "../../utils/api";
 import EditIcon from "@mui/icons-material/Edit";
@@ -27,7 +30,7 @@ interface User {
   telegram?: string;
   role: "USER" | "REALTOR" | "ADMIN";
   agency?: string;
-  createdAt: string; 
+  createdAt: string;
 }
 
 const UsersPage: React.FC = () => {
@@ -38,6 +41,9 @@ const UsersPage: React.FC = () => {
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [current, setCurrent] = useState<Partial<User>>({});
+
+  // Стан для пошуку
+  const [searchText, setSearchText] = useState("");
 
   const fetch = async () => {
     setLoading(true);
@@ -73,6 +79,19 @@ const UsersPage: React.FC = () => {
       fetch();
     }
   };
+
+  // Фільтрація за пошуковим текстом
+  const filteredRows = rows.filter((u) => {
+    const txt = searchText.toLowerCase();
+    return (
+      u.fullName.toLowerCase().includes(txt) ||
+      u.email.toLowerCase().includes(txt) ||
+      u.phone.toLowerCase().includes(txt) ||
+      (u.telegram?.toLowerCase().includes(txt) ?? false) ||
+      u.role.toLowerCase().includes(txt) ||
+      (u.agency?.toLowerCase().includes(txt) ?? false)
+    );
+  });
 
   const columns: GridColDef[] = [
     { field: "id", headerName: "ID", width: 70 },
@@ -116,49 +135,57 @@ const UsersPage: React.FC = () => {
       <DialogContent dividers>
         <TextField
           label="ID"
-          fullWidth margin="dense"
+          fullWidth
+          margin="dense"
           value={current.id ?? ""}
           InputProps={{ readOnly: true }}
         />
         <TextField
           label="Ім'я"
-          fullWidth margin="dense"
+          fullWidth
+          margin="dense"
           value={current.fullName ?? ""}
           InputProps={{ readOnly: true }}
         />
         <TextField
           label="Email"
-          fullWidth margin="dense"
+          fullWidth
+          margin="dense"
           value={current.email ?? ""}
           InputProps={{ readOnly: true }}
         />
         <TextField
           label="Телефон"
-          fullWidth margin="dense"
+          fullWidth
+          margin="dense"
           value={current.phone ?? ""}
           InputProps={{ readOnly: true }}
         />
         <TextField
           label="Telegram"
-          fullWidth margin="dense"
+          fullWidth
+          margin="dense"
           value={current.telegram ?? ""}
           InputProps={{ readOnly: true }}
         />
         <TextField
           label="Роль"
-          fullWidth margin="dense"
+          fullWidth
+          margin="dense"
           value={current.role ?? ""}
           InputProps={{ readOnly: true }}
         />
         <TextField
           label="Агенція"
-          fullWidth margin="dense"
+          fullWidth
+          margin="dense"
           value={current.agency ?? ""}
           InputProps={{ readOnly: true }}
         />
         <TextField
           label="Дата створення"
-          fullWidth margin="dense"
+          fullWidth
+          margin="dense"
           value={current.createdAt ?? ""}
           InputProps={{ readOnly: true }}
         />
@@ -200,39 +227,45 @@ const UsersPage: React.FC = () => {
         <DialogContent dividers>
           <TextField
             label="Ім'я"
-            fullWidth margin="dense"
+            fullWidth
+            margin="dense"
             value={form.fullName ?? ""}
-            onChange={e => setForm(f => ({ ...f, fullName: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
           />
           <TextField
             label="Email"
-            fullWidth margin="dense"
+            fullWidth
+            margin="dense"
             value={form.email ?? ""}
-            onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
           />
           <TextField
             label="Телефон"
-            fullWidth margin="dense"
+            fullWidth
+            margin="dense"
             value={form.phone ?? ""}
-            onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
           />
           <TextField
             label="Telegram"
-            fullWidth margin="dense"
+            fullWidth
+            margin="dense"
             value={form.telegram ?? ""}
-            onChange={e => setForm(f => ({ ...f, telegram: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, telegram: e.target.value }))}
           />
           <TextField
             label="Роль"
-            fullWidth margin="dense"
+            fullWidth
+            margin="dense"
             value={form.role ?? ""}
-            onChange={e => setForm(f => ({ ...f, role: e.target.value as any }))}
+            onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as any }))}
           />
           <TextField
             label="Агенція"
-            fullWidth margin="dense"
+            fullWidth
+            margin="dense"
             value={form.agency ?? ""}
-            onChange={e => setForm(f => ({ ...f, agency: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, agency: e.target.value }))}
           />
         </DialogContent>
         <DialogActions>
@@ -246,24 +279,46 @@ const UsersPage: React.FC = () => {
   };
 
   return (
-    <>
-      <Button variant="contained" color="primary" onClick={handleAdd} sx={{ mb: 2 }}>
-        Додати користувача
-      </Button>
-      <div style={{ height: 600, width: "100%" }}>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          loading={loading}
-          pageSizeOptions={[10, 25, 50]}
-          initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+    <Box p={2}>
+      <Box display="flex" alignItems="center" mb={2}>
+        <TextField
+          label="Пошук"
+          variant="outlined"
+          size="small"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          sx={{ mr: 2 }}
         />
+        <Button variant="contained" color="primary" onClick={handleAdd}>
+          Додати користувача
+        </Button>
+      </Box>
+
+      <div style={{ height: 600, width: "100%" }}>
+        {loading ? (
+          <Box
+            height="100%"
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <CircularProgress />
+          </Box>
+        ) : (
+          <DataGrid
+            rows={filteredRows}
+            columns={columns}
+            loading={loading}
+            pageSizeOptions={[10, 25, 50]}
+            initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+          />
+        )}
       </div>
 
       <ViewDialog />
       <EditDialog open={editOpen} onClose={() => setEditOpen(false)} isNew={false} />
-      <EditDialog open={addOpen}  onClose={() => setAddOpen(false)}  isNew={true} />
-    </>
+      <EditDialog open={addOpen} onClose={() => setAddOpen(false)} isNew={true} />
+    </Box>
   );
 };
 
