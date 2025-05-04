@@ -15,17 +15,19 @@ import RolesPage from "./pages/admin/RolesPage";
 import UsersPage from "./pages/admin/UsersPage";
 import PropertiesPage from "./pages/admin/PropertiesPage";
 import CategoriesPage from "./pages/admin/CategoriesPage";
+import PoisPage from "./pages/admin/PoisPage";
 import RequireAdmin from "./components/RequireAdmin";
 import StatsPage from "./pages/admin/StatsPage";
 import FavoritesPageAdmin from "./pages/admin/FavoritesPageAdmin";
-
+import MapPage from "./pages/MapPage"; 
 
 function App() {
   return (
     <Router>
       <Navbar />
       <Routes>
-        <Route path="/" element={<ListingsPage />} />
+        <Route path="/" element={<MapPage />} />
+        <Route path="/map" element={<MapPage />} />
         <Route path="/listings" element={<ListingsPage />} />
         <Route path="/property/:id" element={<PropertyDetailsPage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -54,13 +56,17 @@ function App() {
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="favorites" element={<FavoritesPageAdmin />} />
           <Route path="properties" element={<PropertiesPage />} />
+          <Route path="pois" element={<PoisPage />} />       
         </Route>
 
-        <Route path="/admin/stats" element={
-          <RequireAdmin>
-            <StatsPage/>
-          </RequireAdmin>
-        }/>
+        <Route
+          path="/admin/stats"
+          element={
+            <RequireAdmin>
+              <StatsPage />
+            </RequireAdmin>
+          }
+        />
 
         <Route path="/403" element={<h1>403 — Доступ заборонено</h1>} />
       </Routes>
