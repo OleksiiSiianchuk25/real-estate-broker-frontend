@@ -20,11 +20,17 @@ import RequireAdmin from "./components/RequireAdmin";
 import StatsPage from "./pages/admin/StatsPage";
 import FavoritesPageAdmin from "./pages/admin/FavoritesPageAdmin";
 import MapPage from "./pages/MapPage"; 
+import ChatWidget from "./components/ChatWidget";
 
 function App() {
+  const isAuthenticated = Boolean(localStorage.getItem("accessToken"));
+
   return (
     <Router>
       <Navbar />
+
+      <ChatWidget />
+
       <Routes>
         <Route path="/" element={<MapPage />} />
         <Route path="/map" element={<MapPage />} />

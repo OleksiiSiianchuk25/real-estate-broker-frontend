@@ -1,4 +1,5 @@
 // src/pages/MapPage.tsx
+
 import React, { useEffect, useState } from "react";
 import {
   MapContainer,
@@ -48,41 +49,87 @@ const statusLabels: Record<string, string> = {
   FOR_SALE: "Продаж",
 };
 
-function Recenter({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
+function Recenter({
+  lat,
+  lng,
+  zoom,
+}: {
+  lat: number;
+  lng: number;
+  zoom: number;
+}) {
   const map = useMap();
   map.setView([lat, lng], zoom);
   return null;
 }
 
 const charMap: Record<string, string> = {
-  б: "b", Б: "b",
-  в: "v", В: "v",
-  г: "g", Г: "g", ґ: "g", Ґ: "g",
-  д: "d", Д: "d",
-  е: "e", Е: "e", є: "e", Є: "e",
-  ж: "zh", Ж: "zh",
-  з: "z", З: "z",
-  и: "i", И: "i", і: "i", І: "i", ї: "i", Ї: "i", й: "i", Й: "i",
-  к: "k", К: "k",
-  л: "l", Л: "l",
-  м: "m", М: "m",
-  н: "n", Н: "n",
-  о: "o", О: "o",
-  п: "p", П: "p",
-  р: "r", Р: "r",
-  с: "s", С: "s",
-  т: "t", Т: "t",
-  у: "u", У: "u",
-  ф: "f", Ф: "f",
-  х: "kh", Х: "kh",
-  ц: "ts", Ц: "ts",
-  ч: "ch", Ч: "ch",
-  ш: "sh", Ш: "sh",
-  щ: "shch", Щ: "shch",
-  ю: "yu", Ю: "yu",
-  я: "ya", Я: "ya",
-  ь: "", Ь: "",
-  ъ: "", Ъ: "",
+  б: "b",
+  Б: "b",
+  в: "v",
+  В: "v",
+  г: "g",
+  Г: "g",
+  ґ: "g",
+  Ґ: "g",
+  д: "d",
+  Д: "d",
+  е: "e",
+  Е: "e",
+  є: "e",
+  Є: "e",
+  ж: "zh",
+  Ж: "zh",
+  з: "z",
+  З: "z",
+  и: "i",
+  И: "i",
+  і: "i",
+  І: "i",
+  ї: "i",
+  Ї: "i",
+  й: "i",
+  Й: "i",
+  к: "k",
+  К: "k",
+  л: "l",
+  Л: "l",
+  м: "m",
+  М: "m",
+  н: "n",
+  Н: "n",
+  о: "o",
+  О: "o",
+  п: "p",
+  П: "p",
+  р: "r",
+  Р: "r",
+  с: "s",
+  С: "s",
+  т: "t",
+  Т: "t",
+  у: "u",
+  У: "u",
+  ф: "f",
+  Ф: "f",
+  х: "kh",
+  Х: "kh",
+  ц: "ts",
+  Ц: "ts",
+  ч: "ch",
+  Ч: "ch",
+  ш: "sh",
+  Ш: "sh",
+  щ: "shch",
+  Щ: "shch",
+  ю: "yu",
+  Ю: "yu",
+  я: "ya",
+  Я: "ya",
+  ь: "",
+  Ь: "",
+  ъ: "",
+  Ъ: "",
 };
 function normalize(str: string) {
   return str
@@ -99,14 +146,25 @@ const MapPage: React.FC = () => {
   const [cityFilter, setCityFilter] = useState("");
   const [streetFilter, setStreetFilter] = useState("");
   const [houseFilter, setHouseFilter] = useState("");
-  const [panTo, setPanTo] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
+  const [panTo, setPanTo] = useState<{
+    lat: number;
+    lng: number;
+    zoom: number;
+  } | null>(null);
 
   useEffect(() => {
     api
-      .get<Property[]>("/properties")
+      .get("/properties")
       .then((res) => {
-        setProperties(res.data);
-        setFiltered(res.data);
+        // Якщо бекенд повернув масив — беремо його,
+        // інакше шукаємо поле properties
+        const data: Property[] = Array.isArray(res.data)
+          ? res.data
+          : Array.isArray(res.data.properties)
+          ? res.data.properties
+          : [];
+        setProperties(data);
+        setFiltered(data);
       })
       .catch(console.error);
   }, []);
@@ -116,7 +174,7 @@ const MapPage: React.FC = () => {
     const normStreet = normalize(streetFilter);
     const normHouse = normalize(houseFilter);
 
-    let result = properties.filter((p) => {
+    const result = properties.filter((p) => {
       const np = normalize(p.address);
       const nc = normalize(p.city);
       if (cityFilter && nc !== normCity) return false;

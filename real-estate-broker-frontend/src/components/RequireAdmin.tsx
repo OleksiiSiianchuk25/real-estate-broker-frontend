@@ -1,16 +1,22 @@
+// src/components/RequireAdmin.tsx
+
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { JSX } from "react/jsx-runtime";
+import { useAuth } from "../contexts/AuthContext";
 
-const RequireAdmin: React.FC<{ children: JSX.Element }> = ({ children }) => {
+interface RequireAdminProps {
+  children: React.ReactNode;
+}
+
+const RequireAdmin: React.FC<RequireAdminProps> = ({ children }) => {
+  const { isAuthenticated, role } = useAuth();
   const location = useLocation();
-  const role = localStorage.getItem("role");
 
-  if (role !== "ADMIN") {
+  if (!isAuthenticated || role !== "ADMIN") {
     return <Navigate to="/" state={{ from: location }} replace />;
   }
 
-  return children;
+  return <>{children}</>;
 };
 
 export default RequireAdmin;
