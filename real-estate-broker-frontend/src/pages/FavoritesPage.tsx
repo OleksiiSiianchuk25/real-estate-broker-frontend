@@ -37,8 +37,8 @@ const FavoritesPage: React.FC = () => {
       const response = await api.get<Favorite[]>("/favorites");
       setFavorites(response.data);
     } catch (err) {
-      console.error("Помилка завантаження закладок", err);
-      setError("Не вдалося завантажити закладки");
+      console.error("Помилка завантаження улюблених", err);
+      setError("Не вдалося завантажити улюблені");
     } finally {
       setLoading(false);
     }
@@ -53,7 +53,7 @@ const FavoritesPage: React.FC = () => {
       await api.delete(`/favorites/${favoriteId}`);
       setFavorites((prev) => prev.filter((fav) => fav.id !== favoriteId));
     } catch (err) {
-      console.error("Помилка видалення закладки", err);
+      console.error("Помилка видалення обраного", err);
       setError("Не вдалося видалити закладку");
     }
   };
@@ -87,7 +87,7 @@ const FavoritesPage: React.FC = () => {
   return (
     <Container>
       <Typography variant="h4" align="center" gutterBottom>
-        Мої закладки
+        Мої улюблені
       </Typography>
 
       {/* Використовуємо CSS Grid замість MUI Grid */}
@@ -107,7 +107,7 @@ const FavoritesPage: React.FC = () => {
             <CardMedia
               component="img"
               height="200"
-              image={fav.property.imageUrl || "https://via.placeholder.com/400"}
+              image={fav.property.imageUrl || "https://cdn.britannica.com/73/114973-050-2DC46083/Midtown-Manhattan-Empire-State-Building-New-York.jpg"}
               alt={fav.property.title}
             />
             <CardContent>

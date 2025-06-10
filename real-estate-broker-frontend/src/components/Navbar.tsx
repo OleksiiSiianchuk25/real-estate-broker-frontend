@@ -50,6 +50,9 @@ const Navbar: React.FC = () => {
           <Button color="inherit" component={Link} to="/listings">
             Оголошення
           </Button>
+          <Button color="inherit" component={Link} to="/realtors">
+            Рієлтори
+          </Button>
 
           {/* Адмін-меню */}
           {isAuthenticated && isAdmin && (
@@ -68,9 +71,9 @@ const Navbar: React.FC = () => {
                 <MenuItem component={Link} to="/admin/roles" onClick={closeAdminMenu}>
                   Ролі
                 </MenuItem>
-                <MenuItem component={Link} to="/admin/categories" onClick={closeAdminMenu}>
+                {/* <MenuItem component={Link} to="/admin/categories" onClick={closeAdminMenu}>
                   Категорії
-                </MenuItem>
+                </MenuItem> */}
                 <MenuItem component={Link} to="/admin/properties" onClick={closeAdminMenu}>
                   Оголошення
                 </MenuItem>
@@ -78,7 +81,7 @@ const Navbar: React.FC = () => {
                   POI
                 </MenuItem>
                 <MenuItem component={Link} to="/admin/favorites" onClick={closeAdminMenu}>
-                  Закладки
+                  Улюблені
                 </MenuItem>
                 <MenuItem component={Link} to="/admin/stats" onClick={closeAdminMenu}>
                   Статистика

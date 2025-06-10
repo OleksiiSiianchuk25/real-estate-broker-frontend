@@ -21,6 +21,8 @@ import StatsPage from "./pages/admin/StatsPage";
 import FavoritesPageAdmin from "./pages/admin/FavoritesPageAdmin";
 import MapPage from "./pages/MapPage"; 
 import ChatWidget from "./components/ChatWidget";
+import RealtorDetailsPage from "./pages/RealtorDetailsPage";
+import RealtorsListPage from "./pages/RealtorsListPage";
 
 function App() {
   const isAuthenticated = Boolean(localStorage.getItem("accessToken"));
@@ -38,6 +40,8 @@ function App() {
         <Route path="/property/:id" element={<PropertyDetailsPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/realtors" element={<RealtorsListPage />} />
+        <Route path="/realtors/:id" element={<RealtorDetailsPage />} />
 
         <Route element={<PrivateRoute />}>
           <Route path="/profile" element={<UserProfilePage />} />

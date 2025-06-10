@@ -6,10 +6,14 @@ import {
   TileLayer,
   Marker,
   Popup,
-  LayerGroup,
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+// Leaflet MarkerCluster plugin
+import "leaflet.markercluster";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { Link } from "react-router-dom";
 import {
   Button,
@@ -20,8 +24,8 @@ import {
   useTheme,
 } from "@mui/material";
 import api from "../utils/api";
-import "leaflet/dist/leaflet.css";
 
+// Іконки для маркерів
 const propertyIcon = new L.Icon({
   iconUrl: require("../assets/icons/location.png"),
   iconSize: [48, 48],
@@ -49,6 +53,7 @@ const statusLabels: Record<string, string> = {
   FOR_SALE: "Продаж",
 };
 
+// Компонент для переміщення карти
 function Recenter({
   lat,
   lng,
@@ -59,77 +64,25 @@ function Recenter({
   zoom: number;
 }) {
   const map = useMap();
-  map.setView([lat, lng], zoom);
+  useEffect(() => {
+    map.setView([lat, lng], zoom);
+  }, [lat, lng, zoom, map]);
   return null;
 }
 
+// Мапа для нормалізації українського тексту
 const charMap: Record<string, string> = {
-  б: "b",
-  Б: "b",
-  в: "v",
-  В: "v",
-  г: "g",
-  Г: "g",
-  ґ: "g",
-  Ґ: "g",
-  д: "d",
-  Д: "d",
-  е: "e",
-  Е: "e",
-  є: "e",
-  Є: "e",
-  ж: "zh",
-  Ж: "zh",
-  з: "z",
-  З: "z",
-  и: "i",
-  И: "i",
-  і: "i",
-  І: "i",
-  ї: "i",
-  Ї: "i",
-  й: "i",
-  Й: "i",
-  к: "k",
-  К: "k",
-  л: "l",
-  Л: "l",
-  м: "m",
-  М: "m",
-  н: "n",
-  Н: "n",
-  о: "o",
-  О: "o",
-  п: "p",
-  П: "p",
-  р: "r",
-  Р: "r",
-  с: "s",
-  С: "s",
-  т: "t",
-  Т: "t",
-  у: "u",
-  У: "u",
-  ф: "f",
-  Ф: "f",
-  х: "kh",
-  Х: "kh",
-  ц: "ts",
-  Ц: "ts",
-  ч: "ch",
-  Ч: "ch",
-  ш: "sh",
-  Ш: "sh",
-  щ: "shch",
-  Щ: "shch",
-  ю: "yu",
-  Ю: "yu",
-  я: "ya",
-  Я: "ya",
-  ь: "",
-  Ь: "",
-  ъ: "",
-  Ъ: "",
+  б: "b", Б: "b", в: "v", В: "v", г: "g", Г: "g", ґ: "g", Ґ: "g",
+  д: "d", Д: "d", е: "e", Е: "e", є: "e", Є: "e",
+  ж: "zh", Ж: "zh", з: "z", З: "z", и: "i", И: "i",
+  і: "i", І: "i", ї: "i", Ї: "i", й: "i", Й: "i",
+  к: "k", К: "k", л: "l", Л: "l", м: "m", М: "m",
+  н: "n", Н: "n", о: "o", О: "o", п: "p", П: "p",
+  р: "r", Р: "r", с: "s", С: "s", т: "t", Т: "t",
+  у: "u", У: "u", ф: "f", Ф: "f", х: "kh", Х: "kh",
+  ц: "ts", Ц: "ts", ч: "ch", Ч: "ch", ш: "sh", Ш: "sh",
+  щ: "shch", Щ: "shch", ю: "yu", Ю: "yu", я: "ya", Я: "ya",
+  ь: "", Ь: "", ъ: "", Ъ: "",
 };
 function normalize(str: string) {
   return str
@@ -139,6 +92,36 @@ function normalize(str: string) {
     .toLowerCase();
 }
 
+// Компонент, що напряму використовує leaflet.markercluster
+const ClusterMarkers: React.FC<{ properties: Property[] }> = ({ properties }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    const clusterGroup = L.markerClusterGroup();
+
+    properties.forEach((p) => {
+      const marker = L.marker([p.latitude, p.longitude], { icon: propertyIcon });
+      const popupContent = `
+        <div style="text-align:center">
+          ${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.title}" style="width:150px; height:auto; display:block; margin:0 auto 8px;" />` : ''}
+          <h3 style="margin:0 0 8px">${p.title}</h3>
+          <p style="margin:0 0 8px"><strong>Статус:</strong> ${statusLabels[p.status] ?? p.status}</p>
+          <a href="/property/${p.id}" style="color:#1976d2; text-decoration:none">Детальніше</a>
+        </div>
+      `;
+      marker.bindPopup(popupContent);
+      clusterGroup.addLayer(marker);
+    });
+
+    map.addLayer(clusterGroup);
+    return () => {
+      map.removeLayer(clusterGroup);
+    };
+  }, [map, properties]);
+
+  return null;
+};
+
 const MapPage: React.FC = () => {
   const theme = useTheme();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -146,18 +129,13 @@ const MapPage: React.FC = () => {
   const [cityFilter, setCityFilter] = useState("");
   const [streetFilter, setStreetFilter] = useState("");
   const [houseFilter, setHouseFilter] = useState("");
-  const [panTo, setPanTo] = useState<{
-    lat: number;
-    lng: number;
-    zoom: number;
-  } | null>(null);
+  const [panTo, setPanTo] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
 
+  // Завантажуємо оголошення
   useEffect(() => {
     api
       .get("/properties")
       .then((res) => {
-        // Якщо бекенд повернув масив — беремо його,
-        // інакше шукаємо поле properties
         const data: Property[] = Array.isArray(res.data)
           ? res.data
           : Array.isArray(res.data.properties)
@@ -169,6 +147,7 @@ const MapPage: React.FC = () => {
       .catch(console.error);
   }, []);
 
+  // Застосування фільтрів і центрування карти
   const applyFilters = async () => {
     const normCity = normalize(cityFilter);
     const normStreet = normalize(streetFilter);
@@ -221,6 +200,7 @@ const MapPage: React.FC = () => {
 
   return (
     <>
+      {/* Панель фільтрів */}
       <Paper
         elevation={3}
         sx={{
@@ -279,69 +259,15 @@ const MapPage: React.FC = () => {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <LayerGroup>
-          {filtered.map((p) => (
-            <Marker
-              key={p.id}
-              position={[p.latitude, p.longitude]}
-              icon={propertyIcon}
-            >
-              <Popup>
-                {p.imageUrl && (
-                  <img
-                    src={p.imageUrl}
-                    alt={p.title}
-                    style={{
-                      width: "150px",
-                      height: "auto",
-                      display: "block",
-                      margin: "0 auto 8px",
-                    }}
-                  />
-                )}
-                <Typography variant="h6" gutterBottom>
-                  {p.title}
-                </Typography>
-                <Box mb={1}>
-                  <Typography
-                    component="span"
-                    sx={{ fontSize: "1.1rem", fontWeight: "bold" }}
-                  >
-                    Статус:
-                  </Typography>{" "}
-                  <Typography
-                    component="span"
-                    sx={{ fontSize: "1.1rem", color: "primary.main" }}
-                  >
-                    {statusLabels[p.status] ?? p.status}
-                  </Typography>
-                </Box>
-                <Button
-                  component={Link}
-                  to={`/property/${p.id}`}
-                  variant="contained"
-                  size="small"
-                  sx={{
-                    mt: 1,
-                    backgroundColor: "primary.main",
-                    "&:hover": { backgroundColor: "primary.dark" },
-                    color: "#fff !important",
-                  }}
-                >
-                  Детальніше
-                </Button>
-              </Popup>
-            </Marker>
-          ))}
+        {/* Кластеризовані маркери */}
+        <ClusterMarkers properties={filtered} />
 
-          {!hasHousePoi && panTo && (
-            <Marker position={[panTo.lat, panTo.lng]} icon={houseIcon}>
-              <Popup>
-                <Typography>Вказаний будинок</Typography>
-              </Popup>
-            </Marker>
-          )}
-        </LayerGroup>
+        {/* Маркер вказаного будинку */}
+        {!hasHousePoi && panTo && (
+          <Marker position={[panTo.lat, panTo.lng]} icon={houseIcon}>
+            <Popup>Вказаний будинок</Popup>
+          </Marker>
+        )}
       </MapContainer>
     </>
   );

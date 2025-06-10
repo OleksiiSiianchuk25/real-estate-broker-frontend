@@ -79,7 +79,7 @@ const StatsPage: React.FC = () => {
           { title: "Відвідувань", value: stats.visits },
           { title: "Оголошень", value: stats.totalProperties },
           { title: "Користувачів", value: stats.totalUsers },
-          { title: "Закладок", value: stats.totalFavorites },
+          { title: "Об'єктів нерухомості доданих в \"Улюблені\"", value: stats.totalFavorites },
         ].map(({ title, value }) => (
           <Card key={title} sx={{ flex: "1 1 calc(25% - 16px)", minWidth: 150 }}>
             <CardContent>
