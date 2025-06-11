@@ -25,7 +25,7 @@ const AdminLayout: React.FC = () => {
       <Tabs value={currentTab >= 0 ? currentTab : 0} onChange={handleChange}>
         <Tab label="Користувачі" />
         <Tab label="Ролі" />
-        <Tab label="Категорії" />
+        {/* <Tab label="Категорії" /> */}
         <Tab label="Улюблені" />
         <Tab label="Оголошення" />
         <Tab label="POIs" />

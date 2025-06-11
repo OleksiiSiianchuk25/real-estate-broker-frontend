@@ -16,6 +16,7 @@ import {
   InputLabel,
   Box,
   Paper,
+  Rating,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import api from "../utils/api";
@@ -28,6 +29,10 @@ interface Property {
   imageUrl: string;
   status: "FOR_SALE" | "FOR_RENT" | "SOLD";
   type: "APARTMENT" | "HOUSE";
+
+  realtorName?: string;
+  realtorRating?: number;
+  rating?: number;
 }
 
 const fallbackImage =
@@ -41,10 +46,19 @@ const ListingsPage: React.FC = () => {
   const [cityFilter, setCityFilter] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [minRealtorRating, setMinRealtorRating] = useState<number | null>(
+    null
+  );
+  const [minPropertyRating, setMinPropertyRating] = useState<number | null>(
+    null
+  );
+  const [sortField, setSortField] = useState<
+    "" | "price" | "realtorRating" | "rating"
+  >("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Опції для селектів
   const cityOptions = [
     { value: "", label: "Всі міста" },
     { value: "Київ", label: "Київ" },
@@ -65,6 +79,7 @@ const ListingsPage: React.FC = () => {
     { value: "HOUSE", label: "Будинок" },
   ];
 
+  // Завантажуємо всі властивості
   const fetchProperties = async () => {
     setLoading(true);
     try {
@@ -88,7 +103,15 @@ const ListingsPage: React.FC = () => {
 
   useEffect(() => {
     fetchProperties();
-  }, [search, statusFilter, typeFilter, cityFilter, minPrice, maxPrice]);
+  }, [
+    search,
+    statusFilter,
+    typeFilter,
+    cityFilter,
+    minPrice,
+    maxPrice,
+    // рейтинг фільтруємо клієнтськи, тому не додаємо тут
+  ]);
 
   const formatPrice = (price: string) =>
     new Intl.NumberFormat("uk-UA", {
@@ -104,7 +127,33 @@ const ListingsPage: React.FC = () => {
     setCityFilter("");
     setMinPrice("");
     setMaxPrice("");
+    setMinRealtorRating(null);
+    setMinPropertyRating(null);
+    setSortField("");
+    setSortOrder("asc");
   };
+
+  // Клієнтська фільтрація і сортування
+  const filtered = properties
+    .filter((p) => {
+      const rr = p.realtorRating ?? 0;
+      const pr = p.rating ?? 0;
+      if (minRealtorRating !== null && rr < minRealtorRating) return false;
+      if (minPropertyRating !== null && pr < minPropertyRating) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (!sortField) return 0;
+      let av: number, bv: number;
+      if (sortField === "price") {
+        av = parseFloat(a.price);
+        bv = parseFloat(b.price);
+      } else {
+        av = a[sortField] ?? 0;
+        bv = b[sortField] ?? 0;
+      }
+      return sortOrder === "asc" ? av - bv : bv - av;
+    });
 
   return (
     <Container>
@@ -113,28 +162,20 @@ const ListingsPage: React.FC = () => {
       </Typography>
 
       <Paper elevation={3} sx={{ p: 2, mb: 3 }}>
-        <Box display="flex" flexWrap="wrap" gap={2}>
-          {/* пошук */}
+        <Box display="flex" flexWrap="wrap" gap={2} alignItems="center">
+          {/* Основні фільтри */}
           <TextField
             label="Пошук житла"
-            fullWidth
             variant="outlined"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-
-          {/* місто */}
-          <FormControl fullWidth sx={{ minWidth: 200 }}>
-            <InputLabel id="city-label">Місто</InputLabel>
+          <FormControl sx={{ minWidth: 160 }}>
+            <InputLabel>Місто</InputLabel>
             <Select
-              labelId="city-label"
-              id="city-select"
               value={cityFilter}
               label="Місто"
               onChange={(e) => setCityFilter(e.target.value)}
-              renderValue={(v) =>
-                cityOptions.find((o) => o.value === v)?.label
-              }
             >
               {cityOptions.map((opt) => (
                 <MenuItem key={opt.value} value={opt.value}>
@@ -143,19 +184,12 @@ const ListingsPage: React.FC = () => {
               ))}
             </Select>
           </FormControl>
-
-          {/* статус */}
-          <FormControl fullWidth sx={{ minWidth: 200 }}>
-            <InputLabel id="status-label">Статус</InputLabel>
+          <FormControl sx={{ minWidth: 160 }}>
+            <InputLabel>Статус</InputLabel>
             <Select
-              labelId="status-label"
-              id="status-select"
               value={statusFilter}
               label="Статус"
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              renderValue={(v) =>
-                statusOptions.find((o) => o.value === v)?.label
-              }
             >
               {statusOptions.map((opt) => (
                 <MenuItem key={opt.value} value={opt.value}>
@@ -164,19 +198,12 @@ const ListingsPage: React.FC = () => {
               ))}
             </Select>
           </FormControl>
-
-          {/* тип */}
-          <FormControl fullWidth sx={{ minWidth: 200 }}>
-            <InputLabel id="type-label">Тип житла</InputLabel>
+          <FormControl sx={{ minWidth: 160 }}>
+            <InputLabel>Тип</InputLabel>
             <Select
-              labelId="type-label"
-              id="type-select"
               value={typeFilter}
-              label="Тип житла"
+              label="Тип"
               onChange={(e) => setTypeFilter(e.target.value as any)}
-              renderValue={(v) =>
-                typeOptions.find((o) => o.value === v)?.label
-              }
             >
               {typeOptions.map((opt) => (
                 <MenuItem key={opt.value} value={opt.value}>
@@ -185,15 +212,13 @@ const ListingsPage: React.FC = () => {
               ))}
             </Select>
           </FormControl>
-
-          {/* цінові */}
           <TextField
             label="Мін. ціна"
             type="number"
             variant="outlined"
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
-            sx={{ minWidth: 120 }}
+            sx={{ width: 100 }}
           />
           <TextField
             label="Макс. ціна"
@@ -201,9 +226,54 @@ const ListingsPage: React.FC = () => {
             variant="outlined"
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
-            sx={{ minWidth: 120 }}
+            sx={{ width: 100 }}
           />
+
+          {/* Фільтри за рейтингом */}
+          <Box display="flex" alignItems="center">
+            <Typography sx={{ mr: 1 }}>Рієлтор від:</Typography>
+            <Rating
+              value={minRealtorRating}
+              onChange={(_, nv) => setMinRealtorRating(nv)}
+              precision={0.5}
+            />
+          </Box>
+          <Box display="flex" alignItems="center">
+            <Typography sx={{ mr: 1 }}>Житло від:</Typography>
+            <Rating
+              value={minPropertyRating}
+              onChange={(_, nv) => setMinPropertyRating(nv)}
+              precision={0.5}
+            />
+          </Box>
+
+          {/* Сортування */}
+          <FormControl sx={{ minWidth: 160 }}>
+            <InputLabel>Сортувати за</InputLabel>
+            <Select
+              value={sortField}
+              label="Сортувати за"
+              onChange={(e) => setSortField(e.target.value as any)}
+            >
+              <MenuItem value="">Без сортування</MenuItem>
+              <MenuItem value="price">Ціна</MenuItem>
+              <MenuItem value="realtorRating">Рейтинг рієлтора</MenuItem>
+              <MenuItem value="rating">Рейтинг житла</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: 120 }}>
+            <InputLabel>Порядок</InputLabel>
+            <Select
+              value={sortOrder}
+              label="Порядок"
+              onChange={(e) => setSortOrder(e.target.value as any)}
+            >
+              <MenuItem value="asc">Зростання</MenuItem>
+              <MenuItem value="desc">Спадання</MenuItem>
+            </Select>
+          </FormControl>
         </Box>
+
         <Box mt={2} textAlign="right">
           <Button variant="outlined" color="secondary" onClick={handleClearFilters}>
             Очистити фільтри
@@ -216,7 +286,9 @@ const ListingsPage: React.FC = () => {
           <CircularProgress />
         </Box>
       ) : error ? (
-        <Typography color="error" align="center">{error}</Typography>
+        <Typography color="error" align="center">
+          {error}
+        </Typography>
       ) : (
         <Box
           display="grid"
@@ -229,40 +301,58 @@ const ListingsPage: React.FC = () => {
             },
           }}
         >
-          {properties.length > 0 ? (
-            properties.map((property) => (
-              <Card key={property.id}>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={property.imageUrl || fallbackImage}
-                  alt={property.title}
-                  onError={(e: any) => {
-                    e.target.onerror = null;
-                    e.target.src = fallbackImage;
-                  }}
-                />
-                <CardContent>
-                  <Typography variant="h6">{property.title}</Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    📍 {property.city}
-                  </Typography>
-                  <Typography color="textSecondary">
-                    {formatPrice(property.price)}
-                  </Typography>
-                </CardContent>
-                <CardActions>
-                  <Button
-                    size="small"
-                    color="primary"
-                    component={Link}
-                    to={`/property/${property.id}`}
-                  >
-                    Детальніше
-                  </Button>
-                </CardActions>
-              </Card>
-            ))
+          {filtered.length > 0 ? (
+            filtered.map((property) => {
+              const rr = property.realtorRating ?? 0;
+              const pr = property.rating ?? 0;
+              const name = property.realtorName || "Н/д";
+
+              return (
+                <Card key={property.id}>
+                  <CardMedia
+                    component="img"
+                    height="200"
+                    image={property.imageUrl || fallbackImage}
+                    alt={property.title}
+                    onError={(e: any) => {
+                      e.target.onerror = null;
+                      e.target.src = fallbackImage;
+                    }}
+                  />
+                  <CardContent>
+                    <Typography variant="h6">{property.title}</Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      📍 {property.city}
+                    </Typography>
+                    <Typography color="textSecondary">
+                      {formatPrice(property.price)}
+                    </Typography>
+                    <Box display="flex" alignItems="center" mt={1}>
+                      <Rating value={rr} readOnly size="small" precision={0.1} />
+                      <Typography variant="body2" ml={1}>
+                        Рейтинг рієлтора
+                      </Typography>
+                    </Box>
+                    <Box display="flex" alignItems="center" mt={1}>
+                      <Rating value={pr} readOnly size="small" precision={0.1} />
+                      <Typography variant="body2" ml={1}>
+                        Рейтинг житла
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                  <CardActions>
+                    <Button
+                      size="small"
+                      color="primary"
+                      component={Link}
+                      to={`/property/${property.id}`}
+                    >
+                      Детальніше
+                    </Button>
+                  </CardActions>
+                </Card>
+              );
+            })
           ) : (
             <Typography variant="h6" align="center" sx={{ mt: 3 }}>
               Немає результатів за вашими фільтрами.

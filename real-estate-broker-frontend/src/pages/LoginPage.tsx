@@ -1,4 +1,6 @@
-import { useState } from "react";
+// src/pages/LoginPage.tsx
+
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Container,
@@ -10,9 +12,11 @@ import {
   CircularProgress,
 } from "@mui/material";
 import api from "../utils/api";
+import { useAuth } from "../contexts/AuthContext";
 
-const LoginPage = () => {
+const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -23,27 +27,32 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const handleLogin = async () => {
     setError("");
     setSuccess("");
     setLoading(true);
+
     try {
-      const response = await api.post("/auth/login", formData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await api.post(
+        "/auth/login",
+        formData,
+        { headers: { "Content-Type": "application/json" } }
+      );
 
       const { accessToken, role } = response.data;
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("role", role);
-      window.dispatchEvent(new Event("storage"));
+      // Зберігаємо токен і роль через AuthContext
+      login(accessToken, role);
 
-      setSuccess("Вхід успішний! Перенаправлення...");
-      setTimeout(() => navigate("/"), 2000);
+      setSuccess("Вхід успішний! Переадресація...");
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
     } catch (err) {
       console.error("Помилка при логіні:", err);
       setError("Невірний email або пароль.");
@@ -87,7 +96,13 @@ const LoginPage = () => {
         {loading ? (
           <CircularProgress />
         ) : (
-          <Button fullWidth variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleLogin}>
+          <Button
+            fullWidth
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2 }}
+            onClick={handleLogin}
+          >
             Увійти
           </Button>
         )}
@@ -95,7 +110,7 @@ const LoginPage = () => {
 
       <Box mt={2} textAlign="center">
         <Typography variant="body2">
-          Ще не маєте акаунту? <a href="/register">Зареєструватися</a>
+          Ще не маєте акаунту? <Button component="a" href="/register">Зареєструватися</Button>
         </Typography>
       </Box>
     </Container>

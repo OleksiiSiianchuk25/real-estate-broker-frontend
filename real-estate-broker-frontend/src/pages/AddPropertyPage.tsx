@@ -87,7 +87,6 @@ const AddPropertyPage = () => {
         "/properties",
         {
           ...formData,
-          // Якщо mapCoordinates вибрані, передаємо їх; інакше – використовуємо formData
           latitude: mapCoordinates ? mapCoordinates.lat : formData.latitude,
           longitude: mapCoordinates ? mapCoordinates.lng : formData.longitude,
         },
