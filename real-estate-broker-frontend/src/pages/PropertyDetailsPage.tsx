@@ -1,5 +1,4 @@
-// src/pages/PropertyDetailsPage.tsx
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   Container,
@@ -20,14 +19,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Divider,
 } from "@mui/material";
 import api from "../utils/api";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Підключення стандартних маркерів Leaflet
+// Настройка стандартних іконок Leaflet
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -63,7 +61,6 @@ interface ReviewDTO {
   createdAt: string;
 }
 
-// Оновлена структура відповіді бекенду
 interface RealtorRatingSummary {
   averageRating: number;
   totalRatings: number;
@@ -111,7 +108,7 @@ export default function PropertyDetailsPage() {
       .catch(() => setIsLoggedIn(false));
   }, []);
 
-  // --- Завантаження ---
+  // Завантаження даних оголошення
   useEffect(() => {
     api
       .get<PropertyDTO>(`/properties/${id}`)
@@ -120,6 +117,7 @@ export default function PropertyDetailsPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Завантаження відгуків
   useEffect(() => {
     setReviewsLoading(true);
     api
@@ -129,21 +127,18 @@ export default function PropertyDetailsPage() {
       .finally(() => setReviewsLoading(false));
   }, [id]);
 
+  // Завантаження рейтингу рієлтора
   useEffect(() => {
     if (!property) return;
     setSummaryLoading(true);
     api
-      .get<RealtorRatingSummary>(
-        `/realtors/${property.realtorId}/ratings/summary`
-      )
+      .get<RealtorRatingSummary>(`/realtors/${property.realtorId}/ratings/summary`)
       .then((res) => setSummary(res.data))
-      .catch(() =>
-        setSummaryError("Не вдалося завантажити рейтинг рієлтора")
-      )
+      .catch(() => setSummaryError("Не вдалося завантажити рейтинг рієлтора"))
       .finally(() => setSummaryLoading(false));
   }, [property]);
 
-  // --- Обробники ---
+  // Додати до закладок
   const handleAddFavorite = async () => {
     try {
       await api.post("/favorites", { propertyId: property!.id });
@@ -153,14 +148,19 @@ export default function PropertyDetailsPage() {
     }
   };
 
+  // Upsert відгук по нерухомості
   const handleAddReview = async () => {
     if (!newRating || !newComment.trim()) return;
     try {
-      const res = await api.post<ReviewDTO>(
-        `/properties/${id}/reviews`,
-        { rating: newRating, comment: newComment }
-      );
-      setReviews((prev) => [res.data, ...prev]);
+      const res = await api.post<ReviewDTO>(`/properties/${id}/reviews`, {
+        rating: newRating,
+        comment: newComment,
+      });
+      // Заміняємо старий відгук того ж автора новим
+      setReviews((prev) => [
+        res.data,
+        ...prev.filter((r) => r.author !== res.data.author),
+      ]);
       setNewComment("");
       setNewRating(null);
     } catch {
@@ -168,6 +168,7 @@ export default function PropertyDetailsPage() {
     }
   };
 
+  // Upsert відгук про ріелтора
   const handleRealtorReview = async () => {
     if (!realtorRating || !realtorComment.trim() || !property) return;
     try {
@@ -175,7 +176,7 @@ export default function PropertyDetailsPage() {
         `/realtors/${property.realtorId}/ratings`,
         { rating: realtorRating, comment: realtorComment }
       );
-      // Оновлюємо локальний summary
+      // Оновлюємо локальний підрахунок рейтингу
       setSummary((prev) =>
         prev
           ? {
@@ -204,7 +205,7 @@ export default function PropertyDetailsPage() {
         {property.title}
       </Typography>
 
-      {/* Картка нерухомості */}
+      {/* Деталі оголошення */}
       <Card>
         <CardMedia
           component="img"
@@ -213,11 +214,10 @@ export default function PropertyDetailsPage() {
           alt={property.title}
         />
         <CardContent>
-          {/* Опис */}
+          {/* Опис та дані */}
           <Typography variant="h6">Опис</Typography>
           <Typography>{property.description}</Typography>
 
-          {/* Інші дані */}
           <Typography variant="h6" mt={2}>
             Ціна
           </Typography>
@@ -254,7 +254,7 @@ export default function PropertyDetailsPage() {
             {property.city}, {property.address}
           </Typography>
 
-          {/* Контакти і кнопки для рієлтора */}
+          {/* Ріелтор */}
           <Box mt={2}>
             <Typography variant="h6">Рієлтор</Typography>
             <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
@@ -283,7 +283,7 @@ export default function PropertyDetailsPage() {
             </Box>
           </Box>
 
-          {/* рейтинг рієлтора */}
+          {/* Рейтинг рієлтора */}
           <Box mt={2}>
             <Typography variant="h6">Рейтинг рієлтора</Typography>
             {summaryLoading ? (
@@ -301,14 +301,14 @@ export default function PropertyDetailsPage() {
         </CardContent>
       </Card>
 
-      {/* Модальне вікно для залишення відгуку про рієлтора */}
+      {/* Модальне вікно відгуку про рієлтора */}
       <Dialog
         open={openRealtorDialog}
         onClose={() => setOpenRealtorDialog(false)}
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Залишити відгук про рієлтора</DialogTitle>
+        <DialogTitle>Залишити відгук про ріелтора</DialogTitle>
         <DialogContent>
           <Box display="flex" flexDirection="column" gap={2} mt={1}>
             <Rating
@@ -339,7 +339,7 @@ export default function PropertyDetailsPage() {
         </DialogActions>
       </Dialog>
 
-      {/* Закладки */}
+      {/* Кнопка закладок */}
       <Button
         variant="contained"
         color="primary"
@@ -367,7 +367,7 @@ export default function PropertyDetailsPage() {
         </MapContainer>
       </Box>
 
-      {/* Відгуки нерухомості */}
+      {/* Секція відгуків нерухомості */}
       <Box mt={6}>
         <Typography variant="h5" gutterBottom>
           Відгуки
@@ -400,7 +400,7 @@ export default function PropertyDetailsPage() {
           </List>
         )}
 
-        {/* Форма нового відгуку */}
+        {/* Форма нового відгуку (upsert) */}
         {isLoggedIn ? (
           <Box mt={2} display="flex" flexDirection="column" gap={1}>
             <Typography>Залишити відгук:</Typography>

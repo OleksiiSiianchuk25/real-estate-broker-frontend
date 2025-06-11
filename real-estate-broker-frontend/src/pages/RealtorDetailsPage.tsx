@@ -1,3 +1,5 @@
+// src/pages/RealtorDetailsPage.tsx
+
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
@@ -51,20 +53,21 @@ export default function RealtorDetailsPage() {
   const [error, setError] = useState("");
   const [newRating, setNewRating] = useState<number | null>(null);
   const [newComment, setNewComment] = useState("");
-  const fallbackImage = "https://cdn.britannica.com/73/114973-050-2DC46083/Midtown-Manhattan-Empire-State-Building-New-York.jpg";
-
+  const fallbackImage =
+    "https://cdn.britannica.com/73/114973-050-2DC46083/Midtown-Manhattan-Empire-State-Building-New-York.jpg";
 
   // Authentication state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    // Check if user is authenticated
+  // Check if user is authenticated
   useEffect(() => {
     api
-      .get('/users/profile')
+      .get("/users/profile")
       .then(() => setIsLoggedIn(true))
       .catch(() => setIsLoggedIn(false));
   }, []);
 
+  // Load realtor, their properties and reviews
   useEffect(() => {
     Promise.all([
       api.get<RealtorDTO>(`/realtors/${id}`),
@@ -80,6 +83,7 @@ export default function RealtorDetailsPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Upsert review: replace any existing from same author
   const handleSubmitReview = async () => {
     if (!newRating || !newComment.trim()) return;
     try {
@@ -87,7 +91,10 @@ export default function RealtorDetailsPage() {
         rating: newRating,
         comment: newComment,
       });
-      setReviews((prev) => [res.data, ...prev]);
+      setReviews((prev) => [
+        res.data,
+        ...prev.filter((r) => r.author !== res.data.author),
+      ]);
       setNewRating(null);
       setNewComment("");
     } catch {
